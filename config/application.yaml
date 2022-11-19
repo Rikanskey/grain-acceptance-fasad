@@ -1,0 +1,9 @@
+http:
+  port: 8080
+
+db:
+#  uri: 'jdbc:postgresql://localhost:5432/grain_acceptance'
+#  uri: 'localhost'
+  name: 'grain_acceptance'
+  username: 'postgres'
+  password: '1112'

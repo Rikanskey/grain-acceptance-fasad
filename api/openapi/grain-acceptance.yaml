@@ -1,0 +1,447 @@
+openapi: 3.0.3
+info:
+  title: "Grain acceptance"
+  description: "Application for grain elevators"
+  version: 0.0.1
+
+servers:
+  - url: "https://{hostname}/"
+    variables:
+      hostname:
+        default: "localhost"
+
+paths:
+  /cards:
+    post:
+      tags:
+        - cards
+      operationId: createCard
+      requestBody:
+        description: card creation request data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCardRequest'
+      responses:
+        '201':
+          headers:
+            Content-Location:
+              description: created card url
+              schema:
+                type: string
+          description: card created
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: only authorized person can create card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: invalid data for card creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /consignment/{consignmentId}:
+    get:
+      tags:
+        - consignments
+      operationId: getConsignment
+      parameters:
+        - in: path
+          name: consignmentId
+          schema:
+            type: string
+          required: true
+          description: consignment id
+      responses:
+        '200':
+          description: found consignment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsignmentResponse'
+        '404':
+          description: consignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /consignment/{consignmentId}/grossWeight:
+    patch:
+      tags:
+        - consignments
+      operationId: updateConsignmentGrossWeight
+      parameters:
+        - in: path
+          name: consignmentId
+          schema:
+            type: string
+          required: true
+          description: consignment id
+      responses:
+        204:
+          description: consignment gross weight updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrossWeightUpdateRequest'
+        '404':
+          description: consignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /consignment/{consignmentId}/transportWeight:
+    patch:
+      tags:
+        - consignments
+      operationId: updateConsignmentTransportWeight
+      parameters:
+        - in: path
+          name: consignmentId
+          schema:
+            type: string
+          required: true
+          description: consignment id
+      responses:
+        204:
+          description: consignment transport weight updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransportWeightUpdateRequest'
+        '404':
+          description: consignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /consignment/{consignmentId}/analyse:
+    patch:
+      tags:
+        - consignments
+      operationId: updateConsignmentAnalyse
+      parameters:
+        - in: path
+          name: consignmentId
+          schema:
+            type: string
+          required: true
+          description: consignment id
+      responses:
+        204:
+          description: consignment analyse information updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyseUpdateRequest'
+        '404':
+          description: consignment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+components:
+  schemas:
+    CreateCardRequest:
+      type: object
+      required: []
+      properties:
+        sender:
+          $ref: '#/components/schemas/CompanyRequest'
+        customer:
+          $ref: '#/components/schemas/CompanyRequest'
+
+    CompanyRequest:
+      type: object
+      required: [ name, postcode, state, city, street, house]
+      properties:
+        name:
+          type: string
+        postcode:
+          type: integer
+        state:
+          type: string
+        city:
+          type: string
+        street:
+          type: string
+        house:
+          type: string
+        office:
+          type: string
+
+    ConsignmentResponse:
+      type: object
+      required: [ id, transportModel, trailerNumber, firstNameDriver, secondNameDriver, middleNameDriver,
+                  sentGrossWeight, sentTransportWeight]
+      properties:
+        id:
+          type: integer
+        grainCard:
+          $ref: '#/components/schemas/ConsignmentGrainCardResponse'
+        transportModel:
+          type: string
+        transportNumber:
+          type: string
+        firstNameDriver:
+          type: string
+        secondNameDriver:
+          type: string
+        middleNameDriver:
+          type: string
+        trailerNumber:
+          type: string
+        grainTye:
+          $ref: '#/components/schemas/GrainTypeResponse'
+        grainImpurity:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartOfImpurityParameterResponse'
+        volatilesImpurity:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartOfImpurityParameterResponse'
+        moisture:
+          type: number
+        origin:
+          type: string
+        nature:
+          type: integer
+        color:
+          type: string
+        smell:
+          type: string
+        smallGrainsPercent:
+          type: number
+        vitreous:
+          type: number
+        gluten:
+          type: number
+        gostCulture:
+          type: number
+        filminess:
+          type: number
+        contamitation:
+          type: number
+        typeSubtypeComposition:
+          type: number
+        core:
+          type: number
+        bug:
+          type: number
+        additionalNotes:
+          type: string
+        acceptedGrossWeight:
+          type: number
+        acceptedTransportWeight:
+          type: number
+        sentGrossWeight:
+          type: number
+        sentTransportWeight:
+          type: number
+
+    GrainTypeResponse:
+      type: object
+      required: [ id, name, gostName, sort]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        gostName:
+          type: string
+        sort:
+          type: string
+
+    ConsignmentGrainCardResponse:
+      type: object
+      required: []
+      properties:
+        id:
+          type: integer
+        customer:
+          $ref: '#/components/schemas/CompanyResponse'
+        sender:
+          $ref: '#/components/schemas/CompanyResponse'
+        processType:
+          type: string
+
+    CompanyResponse:
+      type: object
+      required: [ id, name, postcode, state, city, street, house ]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        postcode:
+          type: integer
+        state:
+          type: string
+        city:
+          type: string
+        street:
+          type: string
+        house:
+          type: string
+        office:
+          type: string
+
+    PartOfImpurityParameterResponse:
+      type: object
+      required: [ id, value, impurityParameter, part ]
+      properties:
+        id:
+          type: integer
+        value:
+          type: number
+        impurityParameter:
+          $ref: '#/components/schemas/ImpurityParameterResponse'
+        part:
+          $ref: '#/components/schemas/PartResponse'
+
+    ImpurityParameterResponse:
+      type: object
+      required: [ id, name ]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    PartResponse:
+      type: object
+      required: [ id, name ]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    GrossWeightUpdateRequest:
+      type: object
+      required: [ value ]
+      properties:
+        value:
+          type: number
+
+    TransportWeightUpdateRequest:
+      type: object
+      required: [ value ]
+      properties:
+        value:
+          type: number
+
+    AnalyseUpdateRequest:
+      type: object
+      required: []
+      properties:
+        moisture:
+          type: number
+        origin:
+          type: string
+        nature:
+          type: integer
+        color:
+          type: string
+        smell:
+          type: string
+        smallGrainsPercent:
+          type: number
+        vitreous:
+          type: number
+        gluten:
+          type: number
+        gostCulture:
+          type: number
+        filminess:
+          type: number
+        contamitation:
+          type: number
+        typeSubtypeComposition:
+          type: number
+        core:
+          type: number
+        bug:
+          type: number
+        additionalNotes:
+          type: string
+
+    Error:
+      type: object
+      required: [ slug, details ]
+      properties:
+        slug:
+          type: string
+        details:
+          type: string
+
